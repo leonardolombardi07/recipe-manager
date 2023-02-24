@@ -1,14 +1,16 @@
 import { RemixBrowser } from "@remix-run/react";
-import { startTransition, StrictMode } from "react";
+import { startTransition } from "react";
 import { hydrateRoot } from "react-dom/client";
 
 function hydrate() {
   startTransition(() => {
     hydrateRoot(
       document,
-      <StrictMode>
-        <RemixBrowser />
-      </StrictMode>
+      // No StrictMode to work with react-beautiful-dnd
+      // See: https://github.com/atlassian/react-beautiful-dnd/issues/2396
+      // <StrictMode>
+      <RemixBrowser />
+      // </StrictMode>
     );
   });
 }

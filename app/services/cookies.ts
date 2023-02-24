@@ -20,7 +20,7 @@ const storage = createCookieSessionStorage({
   },
 });
 
-export async function createUserSession(userId: string, redirectTo: string) {
+async function createUserSession(userId: string, redirectTo: string) {
   const session = await storage.getSession();
   session.set("userId", userId);
   return redirect(redirectTo, {
@@ -30,7 +30,7 @@ export async function createUserSession(userId: string, redirectTo: string) {
   });
 }
 
-export async function isAuthenticated(request: Request) {
+async function isAuthenticated(request: Request) {
   const session = await getUserSession(request);
   const userId = session.get("userId");
   if (!userId || typeof userId !== "string") return false;
@@ -40,3 +40,5 @@ export async function isAuthenticated(request: Request) {
 function getUserSession(request: Request) {
   return storage.getSession(request.headers.get("Cookie"));
 }
+
+export { isAuthenticated, createUserSession };

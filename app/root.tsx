@@ -1,15 +1,20 @@
 import type { LinksFunction } from "@remix-run/node";
 import {
-  Link,
   Links,
   LiveReload,
   Outlet,
   Scripts,
-  useLocation,
+  ScrollRestoration,
+  useTransition,
 } from "@remix-run/react";
 import SUIStyles from "semantic-ui-css/semantic.min.css";
-import { Sidebar, Segment, Menu, Icon, Image, Header } from "semantic-ui-react";
-import { SidebarProvider, useSidebar } from "./context/sidebar";
+import { SidebarProvider } from "./context/sidebar";
+import { MediaContextProvider, Media } from "~/services/media";
+import Header from "./components/shared/Header";
+import { DesktopSidebar, MobileSidebar } from "./components/shared/Sidebar";
+import React from "react";
+import { Icon, Message } from "semantic-ui-react";
+import { useSpinDelay } from "./utils/hooks";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: SUIStyles }];
@@ -17,9 +22,11 @@ export const links: LinksFunction = () => {
 
 export default function AppWithProviders() {
   return (
-    <SidebarProvider>
-      <App />
-    </SidebarProvider>
+    <MediaContextProvider>
+      <SidebarProvider>
+        <App />
+      </SidebarProvider>
+    </MediaContextProvider>
   );
 }
 
@@ -33,120 +40,102 @@ function App() {
       </head>
 
       <body>
-        <AppSidebar />
+        <div>
+          <Media lessThan="computer">
+            <Header />
+          </Media>
+
+          <Media greaterThanOrEqual="computer">
+            <DesktopSidebar>
+              <Outlet />
+            </DesktopSidebar>
+          </Media>
+
+          <Media lessThan="computer">
+            <MobileSidebar>
+              <Outlet />
+            </MobileSidebar>
+          </Media>
+        </div>
+
+        <PageLoadingMessage />
         <LiveReload />
+        <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
 }
 
-const SIDEBAR_CONTENT_WIDTH = 475;
+const LOADER_WORDS = [
+  "loading",
+  "checking cdn",
+  "checking cache",
+  "fetching from db",
+  "compiling mdx",
+  "updating cache",
+  "transfer",
+];
 
-function AppSidebar() {
-  const {
-    state: { visible },
-  } = useSidebar();
-  const contentWidth = visible
-    ? `calc(100vw - ${SIDEBAR_CONTENT_WIDTH}px)`
-    : `100vw`;
+const ACTION_WORDS = [
+  "packaging",
+  "zapping",
+  "validating",
+  "processing",
+  "calculating",
+  "computing",
+  "computering",
+];
 
+let firstRender = true;
+
+function PageLoadingMessage() {
+  const transition = useTransition();
+  const [words, setWords] = React.useState<Array<string>>([]);
+  const [pendingPath, setPendingPath] = React.useState("");
+  const showLoader = useSpinDelay(Boolean(transition.state !== "idle"), {
+    delay: 400,
+    minDuration: 1000,
+  });
+
+  React.useEffect(() => {
+    if (firstRender) return;
+    if (transition.state === "idle") return;
+    if (transition.state === "loading") setWords(LOADER_WORDS);
+    if (transition.state === "submitting") setWords(ACTION_WORDS);
+
+    const interval = setInterval(() => {
+      setWords(([first, ...rest]) => [...rest, first] as Array<string>);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [pendingPath, transition.state]);
+
+  React.useEffect(() => {
+    if (firstRender) return;
+    if (transition.state === "idle") return;
+    setPendingPath(transition.location.pathname);
+  }, [transition]);
+
+  React.useEffect(() => {
+    firstRender = false;
+  }, []);
+
+  if (!showLoader) return null;
+
+  const word = words[0];
   return (
-    <div>
-      <AppHeader />
-
-      <Sidebar.Pushable>
-        <SidebarContent />
-
-        <Sidebar.Pusher style={{ width: contentWidth }}>
-          <Outlet />
-        </Sidebar.Pusher>
-      </Sidebar.Pushable>
-    </div>
-  );
-}
-
-function SidebarContent() {
-  const {
-    state: { visible },
-  } = useSidebar();
-  const { pathname } = useLocation();
-
-  return (
-    <Sidebar
-      visible={visible}
-      as={Menu}
-      icon="labeled"
-      vertical
-      width="very wide"
-      style={{ width: SIDEBAR_CONTENT_WIDTH, padding: "2em 0" }}
-      animation={"slide out"}
+    <Message
+      icon
+      style={{ position: "absolute", bottom: 0, right: 25, width: 500 }}
+      info
+      size="big"
     >
-      <ProfileSection />
-
-      <Segment>
-        <Menu.Item as={Link} to="/home" active={pathname === "/home"}>
-          <Icon name="home" />
-          Home
-        </Menu.Item>
-
-        <Menu.Item
-          as={Link}
-          to="/own-recipes"
-          active={pathname.includes("/own-recipes")}
-        >
-          <Icon name="user" />
-          Own Recipes
-        </Menu.Item>
-
-        <Menu.Item
-          as={Link}
-          to="/saved-recipes"
-          active={pathname.includes("/saved-recipes")}
-        >
-          <Icon name="save" />
-          Saved Recipes
-        </Menu.Item>
-
-        <Menu.Item
-          as={Link}
-          to="/settings"
-          active={pathname.includes("/settings")}
-        >
-          <Icon name="setting" />
-          Settings
-        </Menu.Item>
-      </Segment>
-    </Sidebar>
-  );
-}
-
-const PLACEHOLDER_AVATAR =
-  "https://images.unsplash.com/flagged/photo-1570612861542-284f4c12e75f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80";
-
-function ProfileSection() {
-  return (
-    <Segment basic>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <Image src={PLACEHOLDER_AVATAR} size="medium" circular />
-      </div>
-      <Header style={{ marginTop: 10 }}>Leonardo</Header>
-    </Segment>
-  );
-}
-
-function AppHeader() {
-  const {
-    state: { visible },
-    actions: { close, open },
-  } = useSidebar();
-  return (
-    <Segment style={{ padding: "1em 0em" }}>
-      <Menu fixed={"top"} size="huge" borderless>
-        <Menu.Item active={false} onClick={visible ? close : open}>
-          <Icon name={visible ? "close" : "list alternate outline"} />
-        </Menu.Item>
-      </Menu>
-    </Segment>
+      <Icon name="circle notched" loading />
+      <Message.Content>
+        <Message.Header>{word}</Message.Header>
+        We are fetching that content for you.
+      </Message.Content>
+    </Message>
   );
 }

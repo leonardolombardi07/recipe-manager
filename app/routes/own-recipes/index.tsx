@@ -1,8 +1,17 @@
-import { Link } from "@remix-run/react";
+import type { LoaderArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
 import { Segment, Header, Grid, Card, Button, Icon } from "semantic-ui-react";
 import RecipeCard from "~/components/views/RecipeCard";
+import { Firebase } from "~/services/firebase";
+
+export async function loader(args: LoaderArgs) {
+  const recipes = await Firebase.getOwnRecipes();
+  return json({ recipes });
+}
 
 export default function OwnIndexRoute() {
+  const data = useLoaderData<typeof loader>();
   return (
     <Segment padded>
       <Header as="h1">Own Recipes</Header>
@@ -13,25 +22,11 @@ export default function OwnIndexRoute() {
             <CreateRecipeCardButton />
           </Grid.Column>
 
-          <Grid.Column widescreen={3} tablet={5}>
-            <RecipeCard />
-          </Grid.Column>
-
-          <Grid.Column widescreen={3} tablet={5}>
-            <RecipeCard />
-          </Grid.Column>
-
-          <Grid.Column widescreen={3} tablet={5}>
-            <RecipeCard />
-          </Grid.Column>
-
-          <Grid.Column widescreen={3} tablet={5}>
-            <RecipeCard />
-          </Grid.Column>
-
-          <Grid.Column widescreen={3} tablet={5}>
-            <RecipeCard />
-          </Grid.Column>
+          {data.recipes.map((r) => (
+            <Grid.Column widescreen={3} tablet={5} key={r}>
+              <RecipeCard />
+            </Grid.Column>
+          ))}
         </Grid>
       </Segment>
     </Segment>
@@ -54,6 +49,7 @@ export function CreateRecipeCardButton() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          width: "100%",
         }}
       >
         <Icon name="plus circle" size="huge" style={{ color: "white" }} />

@@ -13,7 +13,7 @@ import {
 export default function SettingsRoute() {
   return (
     <div>
-      <main>
+      <main style={{ minHeight: "100vh" }}>
         <Segment padded>
           <Header as="h1">Settings</Header>
 
