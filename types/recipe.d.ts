@@ -19,5 +19,8 @@ export interface Recipe {
     count: number;
     average: number;
   };
-  author?: { name: string; id: string };
+  author: {
+    id: string;
+    name: string;
+  };
 }

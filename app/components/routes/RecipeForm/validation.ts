@@ -1,4 +1,4 @@
-import { isNumeric } from "./number";
+import { isNumeric } from "~/utils/number";
 
 function validateTitle(title: FormDataEntryValue | null) {
   if (typeof title !== "string") {
@@ -113,6 +113,16 @@ function validateServingValue(value: FormDataEntryValue | null) {
   }
 }
 
+function validateAuthor(author: { id: string; name: string }) {
+  if (!author.id || typeof author.id !== "string") {
+    return `Author id "${author.id} must be a string"`;
+  }
+
+  if (!author.name || typeof author.name !== "string") {
+    return `Author nae "${author.name} must be a string"`;
+  }
+}
+
 export {
   validateTitle,
   validateDescription,
@@ -124,4 +134,5 @@ export {
   validateTime,
   validateExtraTime,
   validateSteps,
+  validateAuthor,
 };

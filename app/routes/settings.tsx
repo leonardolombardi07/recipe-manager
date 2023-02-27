@@ -1,3 +1,4 @@
+import type { LoaderArgs, MetaFunction } from "@remix-run/node";
 import { Link, Outlet, useLocation } from "@remix-run/react";
 import React from "react";
 import type { SemanticICONS } from "semantic-ui-react";
@@ -9,6 +10,17 @@ import {
   Menu,
   Grid,
 } from "semantic-ui-react";
+import RouteErrorBoundary from "~/components/views/RouteErrorBoundary";
+import * as Cookies from "~/services/cookies";
+
+export const meta: MetaFunction = () => ({
+  title: "Recipe Manager | Settings",
+  description: "Manage your profile settings",
+});
+
+export async function loader({ request }: LoaderArgs) {
+  return await Cookies.redirectIfUnauthorized(request);
+}
 
 export default function SettingsRoute() {
   return (
@@ -30,7 +42,7 @@ export default function SettingsRoute() {
               to={"/settings/personal-details"}
             />
 
-            <AccordionItem
+            {/* <AccordionItem
               title={<AccordionTitle icon="mail" title="Emails" />}
               to={"/settings/emails"}
             />
@@ -38,7 +50,7 @@ export default function SettingsRoute() {
             <AccordionItem
               title={<AccordionTitle icon="lock" title="Change password" />}
               to={"/settings/change-password"}
-            />
+            /> */}
           </Accordion>
         </Segment>
       </main>
@@ -102,4 +114,8 @@ function AccordionTitle({
       </Grid.Column>
     </Grid>
   );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  return <RouteErrorBoundary error={error} />;
 }

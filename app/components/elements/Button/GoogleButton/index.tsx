@@ -58,23 +58,20 @@ export default class GoogleButton extends PureComponent<Props, State> {
   };
 
   render() {
-    const { label, style, disabled } = this.props;
+    const { label, style, disabled, ...otherProps } = this.props;
 
     return (
-      <button
-        // {...otherProps}
-        onClick={() => this.props.onClick()}
+      <div
+        {...otherProps}
+        role="button"
+        onClick={this.click}
         style={this.getStyle(style)}
-        // onMouseOver={this.mouseOver}
-        // onMouseOut={this.mouseOut}
-        disabled={disabled}
+        onMouseOver={this.mouseOver}
+        onMouseOut={this.mouseOut}
       >
-        <GoogleIcon
-          disabled={this.props.disabled as boolean}
-          type={this.props.type}
-        />
+        <GoogleIcon {...this.props} />
         <span>{label}</span>
-      </button>
+      </div>
     );
   }
 }

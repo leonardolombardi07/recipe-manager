@@ -1,2 +1,9 @@
-export const USERS_COLLECTION_NAME = "users";
-export const RECIPE_COLLECTION_NAME = "recipes";
+export const COLLECTION = {
+  USERS: "users",
+  RECIPES: "recipes",
+};
+
+export const EMULATOR_PORT = {
+  FIRESTORE: 8080,
+  AUTH: 9099,
+};

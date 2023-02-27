@@ -1,11 +1,14 @@
-import type { LinksFunction } from "@remix-run/node";
+import type { LinksFunction, MetaFunction } from "@remix-run/node";
 import {
+  Link,
   Links,
   LiveReload,
   Outlet,
   Scripts,
   ScrollRestoration,
-  useTransition,
+  useCatch,
+  useLocation,
+  useNavigate,
 } from "@remix-run/react";
 import SUIStyles from "semantic-ui-css/semantic.min.css";
 import { SidebarProvider } from "./context/sidebar";
@@ -13,24 +16,62 @@ import { MediaContextProvider, Media } from "~/services/media";
 import Header from "./components/shared/Header";
 import { DesktopSidebar, MobileSidebar } from "./components/shared/Sidebar";
 import React from "react";
-import { Icon, Message } from "semantic-ui-react";
-import { useSpinDelay } from "./utils/hooks";
+import { Button } from "semantic-ui-react";
+import ErrorBoundaryView from "./components/views/ErrorBoundary";
+import { UserProvider, useUser } from "./context/user";
+import PageLoadingMessage from "./components/shared/PageLoadingMessage";
+import * as Firebase from "~/services/firebase";
 
 export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: SUIStyles }];
+  return [{ rel: "stylesheet", href: SUIStyles, as: "style" }];
 };
 
-export default function AppWithProviders() {
-  return (
-    <MediaContextProvider>
-      <SidebarProvider>
-        <App />
-      </SidebarProvider>
-    </MediaContextProvider>
-  );
+export const meta: MetaFunction = () => {
+  return { charset: "utf-8", description: `Recipe Manager` };
+};
+
+function useAuthentication() {
+  const {
+    actions: { setUser },
+  } = useUser();
+
+  React.useEffect(() => {
+    const unsubscribe = Firebase.onAuthStateChanged(async (user) => {
+      setUser(user);
+    });
+
+    return function onUnmount() {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [setUser]);
 }
 
 function App() {
+  useAuthentication();
+  return (
+    <Document>
+      <Media lessThan="computer">
+        <Header />
+      </Media>
+
+      <Media greaterThanOrEqual="computer">
+        <DesktopSidebar>
+          <Outlet />
+        </DesktopSidebar>
+      </Media>
+
+      <Media lessThan="computer">
+        <MobileSidebar>
+          <Outlet />
+        </MobileSidebar>
+      </Media>
+    </Document>
+  );
+}
+
+function Document({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -40,23 +81,7 @@ function App() {
       </head>
 
       <body>
-        <div>
-          <Media lessThan="computer">
-            <Header />
-          </Media>
-
-          <Media greaterThanOrEqual="computer">
-            <DesktopSidebar>
-              <Outlet />
-            </DesktopSidebar>
-          </Media>
-
-          <Media lessThan="computer">
-            <MobileSidebar>
-              <Outlet />
-            </MobileSidebar>
-          </Media>
-        </div>
+        {children}
 
         <PageLoadingMessage />
         <LiveReload />
@@ -67,75 +92,71 @@ function App() {
   );
 }
 
-const LOADER_WORDS = [
-  "loading",
-  "checking cdn",
-  "checking cache",
-  "fetching from db",
-  "compiling mdx",
-  "updating cache",
-  "transfer",
-];
+export function CatchBoundary() {
+  const caught = useCatch();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
-const ACTION_WORDS = [
-  "packaging",
-  "zapping",
-  "validating",
-  "processing",
-  "calculating",
-  "computing",
-  "computering",
-];
+  const unauthorized = caught.status === 401;
+  const notFound = caught.status === 404;
 
-let firstRender = true;
+  function onClick() {
+    const to = notFound ? "/home" : unauthorized ? "/signin" : pathname;
+    navigate(to);
+  }
 
-function PageLoadingMessage() {
-  const transition = useTransition();
-  const [words, setWords] = React.useState<Array<string>>([]);
-  const [pendingPath, setPendingPath] = React.useState("");
-  const showLoader = useSpinDelay(Boolean(transition.state !== "idle"), {
-    delay: 400,
-    minDuration: 1000,
-  });
+  const buttonText = notFound
+    ? "Go home"
+    : unauthorized
+    ? "Go to sign in"
+    : "Try again";
 
-  React.useEffect(() => {
-    if (firstRender) return;
-    if (transition.state === "idle") return;
-    if (transition.state === "loading") setWords(LOADER_WORDS);
-    if (transition.state === "submitting") setWords(ACTION_WORDS);
-
-    const interval = setInterval(() => {
-      setWords(([first, ...rest]) => [...rest, first] as Array<string>);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [pendingPath, transition.state]);
-
-  React.useEffect(() => {
-    if (firstRender) return;
-    if (transition.state === "idle") return;
-    setPendingPath(transition.location.pathname);
-  }, [transition]);
-
-  React.useEffect(() => {
-    firstRender = false;
-  }, []);
-
-  if (!showLoader) return null;
-
-  const word = words[0];
   return (
-    <Message
-      icon
-      style={{ position: "absolute", bottom: 0, right: 25, width: 500 }}
-      info
-      size="big"
-    >
-      <Icon name="circle notched" loading />
-      <Message.Content>
-        <Message.Header>{word}</Message.Header>
-        We are fetching that content for you.
-      </Message.Content>
-    </Message>
+    <Document>
+      <ErrorBoundaryView header={String(caught.status)} message={caught.data}>
+        <Button
+          onClick={onClick}
+          primary
+          size="huge"
+          style={{ marginTop: "1em" }}
+        >
+          {buttonText}
+        </Button>
+      </ErrorBoundaryView>
+    </Document>
+  );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  const { pathname } = useLocation();
+  return (
+    <Document>
+      <ErrorBoundaryView
+        header={"We're sorry, something went wrong"}
+        message={error.message}
+      >
+        <Button
+          as={Link}
+          to={pathname}
+          primary
+          size="huge"
+          style={{ marginTop: "1em" }}
+        >
+          Try again
+        </Button>
+      </ErrorBoundaryView>
+    </Document>
+  );
+}
+
+export default function AppWithProviders() {
+  return (
+    <MediaContextProvider>
+      <UserProvider>
+        <SidebarProvider>
+          <App />
+        </SidebarProvider>
+      </UserProvider>
+    </MediaContextProvider>
   );
 }

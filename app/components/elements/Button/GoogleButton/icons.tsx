@@ -257,13 +257,7 @@ const disabledSvg = (
   </svg>
 );
 
-export const GoogleIcon = ({
-  disabled,
-  type,
-}: {
-  disabled: boolean;
-  type: "dark" | "light";
-}) => (
+export const GoogleIcon = ({ disabled, type }: any) => (
   <div
     style={
       !disabled ? iconStyle : ({ ...iconStyle, ...disabledIconStyle } as any)

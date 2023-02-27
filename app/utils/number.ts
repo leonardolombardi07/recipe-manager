@@ -5,4 +5,10 @@ function isNumeric(value: any) {
   ); // ...and ensure strings of whitespace fail
 }
 
-export { isNumeric };
+function extractNumber(string: string) {
+  const matches = string.match(/\d+/);
+  if (matches) return matches[0];
+  return null;
+}
+
+export { isNumeric, extractNumber };

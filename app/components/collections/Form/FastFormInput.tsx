@@ -4,10 +4,11 @@ import { Form } from "semantic-ui-react";
 
 interface FastInputProps extends FormInputProps {
   name: string;
+  defaultValue?: string;
 }
 
 export default function FastFormInput({ name, ...props }: FastInputProps) {
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState(props.defaultValue || "");
   return (
     <Form.Input
       name={name}

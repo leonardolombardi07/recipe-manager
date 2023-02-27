@@ -1,7 +1,12 @@
 import { Form } from "@remix-run/react";
 import { Segment, Form as SUIForm, Button } from "semantic-ui-react";
+import { useUser } from "~/context/user";
 
 export default function SettingsPersonalDetailsRoute() {
+  const {
+    state: { user },
+  } = useUser();
+
   return (
     <Segment basic style={{ padding: 0 }}>
       <p>
@@ -11,13 +16,16 @@ export default function SettingsPersonalDetailsRoute() {
 
       <SUIForm as={Form}>
         <SUIForm.Group widths="equal">
-          <SUIForm.Input label="First name" placeholder="First name" />
-          <SUIForm.Input label="Last name" placeholder="Last name" />
-        </SUIForm.Group>
+          <SUIForm.Input
+            value={user?.email}
+            label="Email address"
+            readonly={true}
+          />
 
-        <SUIForm.Group widths="equal">
-          <SUIForm.Input required label="Email address" />
-          <SUIForm.Input label="Phone number" />
+          <SUIForm.Input
+            label="Phone number"
+            defaultValue={user?.phoneNumber}
+          />
         </SUIForm.Group>
 
         <Button type="submit" primary>

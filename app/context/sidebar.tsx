@@ -45,7 +45,7 @@ interface SidebarProviderProps {
 
 function SidebarProvider({ children }: SidebarProviderProps) {
   const [state, dispatch] = React.useReducer(sidebarReducer, {
-    visible: true,
+    visible: false,
   });
 
   const open = React.useCallback(() => {

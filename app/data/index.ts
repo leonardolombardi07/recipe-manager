@@ -1,6 +1,7 @@
 import type { Recipe } from "types";
 
 export const FAKE_RECIPE: Recipe = {
+  id: "Fbs5CqH7m0fOTaTQ64Pz",
   title: "Creamy courgette lasagne",
   description:
     "Serve this quick, creamy courgette & ricotta lasagne for a last-minute dinner party to impress vegetarian friends. It's a great way to use courgettes when they're in season",
@@ -12,7 +13,7 @@ export const FAKE_RECIPE: Recipe = {
     url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1160&q=80",
   },
   author: {
-    name: "Leonardo",
+    name: "Leo",
     id: "20",
   },
   ingredients: [
