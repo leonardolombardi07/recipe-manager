@@ -1,0 +1,28 @@
+[debug] [2023-03-01T19:52:27.155Z] ----------------------------------------------------------------------
+[debug] [2023-03-01T19:52:27.157Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Leonardo\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start
+[debug] [2023-03-01T19:52:27.158Z] CLI Version:   11.24.0
+[debug] [2023-03-01T19:52:27.158Z] Platform:      win32
+[debug] [2023-03-01T19:52:27.158Z] Node Version:  v18.12.1
+[debug] [2023-03-01T19:52:27.159Z] Time:          Wed Mar 01 2023 19:52:27 GMT+0000 (Horário do Meridiano de Greenwich)
+[debug] [2023-03-01T19:52:27.159Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2023-03-01T19:52:27.282Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2023-03-01T19:52:27.282Z] > authorizing via signed-in user (leonardolombardi@poli.ufrj.br)
+[debug] [2023-03-01T19:52:27.366Z] openjdk version "19.0.2" 2023-01-17
+
+[debug] [2023-03-01T19:52:27.367Z] OpenJDK Runtime Environment (build 19.0.2+7-44)
+OpenJDK 64-Bit Server VM (build 19.0.2+7-44, mixed mode, sharing)
+
+[debug] [2023-03-01T19:52:27.400Z] Parsed Java major version: 19
+[info] i  emulators: Starting emulators: auth, firestore, storage {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, firestore, storage"}}
+[debug] [2023-03-01T19:52:27.420Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2023-03-01T19:52:27.420Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2023-03-01T19:52:27.421Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2023-03-01T19:52:27.421Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2023-03-01T19:52:27.421Z] [storage] Storage Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2023-03-01T19:52:27.422Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"storage":[{"address":"127.0.0.1","family":"IPv4","port":9199}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2023-03-01T19:52:27.437Z] [hub] writing locator at C:\Users\Leonardo\AppData\Local\Temp\hub-recipe-manager-44300.json
+[debug] [2023-03-01T19:52:27.450Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2023-03-01T19:52:27.451Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2023-03-01T19:52:27.451Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\Leonardo\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.16.0.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","recipe-manager-44300","--rules","C:\\Users\\Leonardo\\Desktop\\Programação\\remix\\recipe-manager\\firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\Leonardo\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.16.0.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"recipe-manager-44300\",\"--rules\",\"C:\\\\Users\\\\Leonardo\\\\Desktop\\\\Programação\\\\remix\\\\recipe-manager\\\\firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}

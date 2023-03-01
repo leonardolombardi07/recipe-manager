@@ -62,10 +62,7 @@ export function useRootData() {
 function App() {
   return (
     <Document>
-      <Media
-        lessThan="computer"
-        // style={{ padding: 0, background: "red", marginBottom: 0 }}
-      >
+      <Media lessThan="computer">
         <Header />
       </Media>
 
