@@ -7,16 +7,7 @@ import {
 } from "@remix-run/react";
 import React from "react";
 import type { InputOnChangeData, DropdownProps } from "semantic-ui-react";
-import {
-  Form,
-  Button,
-  Segment,
-  Header,
-  Card,
-  Icon,
-  Image,
-  Label,
-} from "semantic-ui-react";
+import { Form, Button, Segment, Header, Label } from "semantic-ui-react";
 import type { Recipe } from "types";
 import FastFormInput from "~/components/collections/Form/FastFormInput";
 import FastFormTextArea from "~/components/collections/Form/FastFormTextArea";
@@ -28,11 +19,13 @@ import type {
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import RecipeRoute from "~/components/routes/RecipeRoute";
 import { reorder } from "~/utils/array";
-import { useUser } from "~/context/user";
 import { getValidatedForm } from "./utils";
 import { DIFICULTY_OPTIONS, HOUR_OPTIONS, MINUTE_OPTIONS } from "./constants";
 import type { action } from "./action";
 import type { FormValues } from "./types";
+import { useRootData } from "~/root";
+import ImageUploader from "~/components/elements/ImageUploader";
+import { Media } from "~/services/media";
 
 interface RecipeFormRouteProps {
   header: string;
@@ -46,9 +39,7 @@ export default function RecipeFormRoute({
   confirmButton,
 }: RecipeFormRouteProps) {
   const navigation = useNavigation();
-  const {
-    state: { user },
-  } = useUser();
+  const { user } = useRootData();
 
   if (navigation.formData && user) {
     const validatedForm = getValidatedForm(navigation.formData, user);
@@ -59,6 +50,7 @@ export default function RecipeFormRoute({
           canDelete={false}
           canEdit={false}
           canGoBack={false}
+          canRate={false}
         />
       );
     }
@@ -87,10 +79,16 @@ function RecipeForm({ initialValues, confirmButton }: RecipeFormProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  function getDefaultValue(key: keyof FormValues): any {
-    // TODO: Fix "any" return type
-    if (actionData?.values) return actionData.values[key];
+  function getDefaultValue<K extends keyof FormValues>(key: K) {
+    if (actionData?.values) return actionData.values[key]; // If Javascript disabled
     return initialValues[key];
+  }
+
+  function getDefaultImage() {
+    const defaultImage = getDefaultValue("image");
+    if (typeof defaultImage === "string") return defaultImage;
+    if (defaultImage instanceof File) return ""; // this should be impossible
+    return defaultImage?.url || null;
   }
 
   function onCancel(event: React.MouseEvent<HTMLButtonElement>) {
@@ -105,8 +103,12 @@ function RecipeForm({ initialValues, confirmButton }: RecipeFormProps) {
       action={pathname}
       encType="multipart/form-data"
     >
-      <Form.Group widths="equal">
-        <ImageUploader initialImage={getDefaultValue("image")} />
+      <Form.Group>
+        <ImageUploader
+          width={300}
+          name="image"
+          initialImage={getDefaultImage()}
+        />
 
         <div style={{ width: "100%", margin: 10 }}>
           <FastFormInput
@@ -155,122 +157,6 @@ function RecipeForm({ initialValues, confirmButton }: RecipeFormProps) {
   );
 }
 
-function ImageUploader({
-  initialImage,
-}: {
-  initialImage: FormValues["image"];
-}) {
-  const [file, setFile] = React.useState<Blob | null>(null);
-  const [touched, setTouched] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  function resetInputValue() {
-    if (inputRef.current?.value) {
-      inputRef.current.value = "";
-    }
-  }
-
-  function onChange(event: React.ChangeEvent<HTMLInputElement>) {
-    if (event.target.files && event.target.files[0]) {
-      setTouched(true);
-      setFile(event.target.files[0]);
-    } else {
-      // Fix for https://stackoverflow.com/questions/42192346/how-to-reset-reactjs-file-input
-      // (Bug when uploading the same file twice)
-      resetInputValue();
-    }
-  }
-
-  function onReset() {
-    setTouched(true);
-    setFile(null);
-    resetInputValue();
-  }
-
-  const displayImageSrc = (function getImageSrc() {
-    if (file) return URL.createObjectURL(file);
-    if (!file && touched) return "";
-    if (initialImage instanceof File) URL.createObjectURL(initialImage);
-    if (typeof initialImage === "string") return initialImage;
-    return "";
-  })();
-
-  const displayImageIsImageFromEditingRecipe =
-    initialImage !== "" && displayImageSrc === initialImage;
-
-  return (
-    <Card
-      style={{
-        height: 400,
-        placeItems: "center",
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
-    >
-      <Card.Content
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {displayImageSrc ? (
-          <React.Fragment>
-            <Image
-              src={displayImageSrc}
-              fluid
-              style={{ height: "100%", width: "100%" }}
-            />
-
-            <Button
-              // type="button" fixes a onClick trigger when pressing enter key on different input
-              // See: https://stackoverflow.com/questions/12325066/button-click-event-fires-when-pressing-enter-key-in-different-input-no-forms
-              type="button"
-              circular
-              color="red"
-              icon="delete"
-              size="huge"
-              style={{ position: "absolute", bottom: 0, left: 0, zIndex: 5 }}
-              onClick={onReset}
-            />
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            <Icon name="camera" size="huge" />
-            <Header style={{ marginTop: 10, textAlign: "center" }}>
-              Tap or click to add a photo
-              <Header.Subheader style={{ marginTop: 30 }}>
-                *Please ensure this is your own image
-              </Header.Subheader>
-            </Header>
-          </React.Fragment>
-        )}
-
-        {/* Nasty hack to make sure that if the visible image is the initial image (when editing),
-          the value of formData.get("image") on action is right */}
-        {displayImageIsImageFromEditingRecipe && (
-          <input hidden name="image" type={"text"} value={displayImageSrc} />
-        )}
-        <input
-          ref={inputRef}
-          name={displayImageIsImageFromEditingRecipe ? undefined : "image"}
-          onChange={onChange}
-          type="file"
-          accept="image/*"
-          style={{
-            color: "transparent",
-            opacity: 0,
-            position: "absolute",
-            height: "100%",
-            cursor: "pointer",
-          }}
-        />
-      </Card.Content>
-    </Card>
-  );
-}
-
 function Timings({
   initialTimings,
 }: {
@@ -307,6 +193,7 @@ function Timings({
           label={"Prep Time (approx.)"}
           placeholder="0 hours"
           error={actionData?.errors?.timings?.prepTime?.hours}
+          fluid
         />
 
         <input
@@ -319,15 +206,12 @@ function Timings({
           value={timings.prepTime.minutes}
           onChange={(e, d) => onChange(d, "prepTime", "minutes")}
           label={{
-            // Hack to keep remove label but keep the right layout
-            // TODO: avoid rendering the label on mobile (because it takes up space)
-            children: () => (
-              <label style={{ color: "transparent" }}>{"-"}</label>
-            ),
+            children: () => <ResponsiveTimingsLabel />,
           }}
           options={MINUTE_OPTIONS}
           placeholder="0 mins"
           error={actionData?.errors?.timings?.prepTime?.minutes}
+          fluid
         />
 
         <input
@@ -343,6 +227,7 @@ function Timings({
           label={"Cook Time (approx.)"}
           placeholder="0 hours"
           error={actionData?.errors?.timings?.cookTime?.hours}
+          fluid
         />
 
         <input
@@ -355,15 +240,12 @@ function Timings({
           value={timings.cookTime.minutes}
           onChange={(e, d) => onChange(d, "cookTime", "minutes")}
           label={{
-            // Hack to keep remove label but keep the right layout
-            // TODO: avoid rendering the label on mobile (because it takes up space)
-            children: () => (
-              <label style={{ color: "transparent" }}>{"-"}</label>
-            ),
+            children: () => <ResponsiveTimingsLabel />,
           }}
           options={MINUTE_OPTIONS}
           placeholder="0 mins"
           error={actionData?.errors?.timings?.cookTime?.minutes}
+          fluid
         />
       </Form.Group>
 
@@ -375,6 +257,18 @@ function Timings({
         defaultValue={initialTimings.extraTime}
       />
     </Segment>
+  );
+}
+
+function ResponsiveTimingsLabel() {
+  return (
+    <React.Fragment>
+      <Media at="mobile">{null}</Media>
+
+      <Media greaterThan="mobile">
+        <label style={{ color: "transparent" }}>{"-"}</label>
+      </Media>
+    </React.Fragment>
   );
 }
 

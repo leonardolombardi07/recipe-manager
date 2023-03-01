@@ -63,7 +63,7 @@ export default function PageLoadingMessage() {
   return (
     <Message
       icon
-      style={{ position: "absolute", bottom: 0, right: 25, width: 500 }}
+      style={{ position: "fixed", bottom: 0, right: 25, width: 500 }}
       info
       size="big"
     >

@@ -1,4 +1,4 @@
-import { Link, useLocation, useSubmit } from "@remix-run/react";
+import { useLocation, useNavigate, useSubmit } from "@remix-run/react";
 import React from "react";
 import {
   Sidebar as SUISidebar,
@@ -10,8 +10,9 @@ import {
 } from "semantic-ui-react";
 import Confirm from "~/components/addons/Confirm";
 import { useSidebar } from "~/context/sidebar";
-import { useUser } from "~/context/user";
+import { useRootData } from "~/root";
 import * as Firebase from "~/services/firebase";
+import { MOBILE_HEADER_HEIGHT } from "../Header";
 
 function useHideSidebar() {
   const TO_HIDE = ["/signin"];
@@ -57,16 +58,21 @@ function MobileSidebar({ children }: SidebarProps) {
     actions: { close },
   } = useSidebar();
   const hideSidebar = useHideSidebar();
+
   return (
-    <SUISidebar.Pushable>
+    <SUISidebar.Pushable style={{ marginTop: MOBILE_HEADER_HEIGHT }}>
       <SUISidebar
         visible={hideSidebar ? false : visible}
         as={Menu}
         icon="labeled"
         vertical
-        width="wide"
+        width="very wide"
         animation={"overlay"}
-        style={{ padding: "2em 0", height: "100vh" }}
+        style={{
+          padding: "2em 0",
+          height: "100vh",
+          width: "100vw",
+        }}
       >
         <SidebarProfile />
         <SidebarLinks />
@@ -79,16 +85,14 @@ function MobileSidebar({ children }: SidebarProps) {
   );
 }
 
-const PLACEHOLDER_PROFILE_URL =
+const PLACEHOLDER_PROFILE_IMAGE_URL =
   "https://react.semantic-ui.com/images/wireframe/image.png";
 
 function SidebarProfile() {
-  const {
-    state: { user },
-  } = useUser();
+  const { user } = useRootData();
 
   const imageSrc =
-    user && user.photoURL ? user.photoURL : PLACEHOLDER_PROFILE_URL;
+    user && user.photoURL ? user.photoURL : PLACEHOLDER_PROFILE_IMAGE_URL;
   const name = user && user.displayName ? user.displayName : "";
 
   return (
@@ -103,16 +107,28 @@ function SidebarProfile() {
 
 function SidebarLinks() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const {
+    actions: { close },
+  } = useSidebar();
+
+  function onClick(to: string) {
+    close();
+    navigate(to);
+  }
+
   return (
     <Segment>
-      <Menu.Item as={Link} to="/home" active={pathname.includes("/home")}>
+      <Menu.Item
+        onClick={() => onClick("/home")}
+        active={pathname.includes("/home")}
+      >
         <Icon name="home" />
         Home
       </Menu.Item>
 
       <Menu.Item
-        as={Link}
-        to="/own-recipes"
+        onClick={() => onClick("/own-recipes")}
         active={pathname.includes("/own-recipes")}
       >
         <Icon name="user" />
@@ -120,8 +136,7 @@ function SidebarLinks() {
       </Menu.Item>
 
       <Menu.Item
-        as={Link}
-        to="/saved-recipes"
+        onClick={() => onClick("/saved-recipes")}
         active={pathname.includes("/saved-recipes")}
       >
         <Icon name="save" />
@@ -129,8 +144,7 @@ function SidebarLinks() {
       </Menu.Item>
 
       <Menu.Item
-        as={Link}
-        to="/settings"
+        onClick={() => onClick("/settings/profile")}
         active={pathname.includes("/settings")}
       >
         <Icon name="setting" />

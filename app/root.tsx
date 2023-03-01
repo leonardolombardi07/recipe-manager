@@ -1,4 +1,10 @@
-import type { LinksFunction, MetaFunction } from "@remix-run/node";
+import type {
+  LinksFunction,
+  LoaderArgs,
+  MetaFunction,
+  SerializeFrom,
+} from "@remix-run/node";
+import { json } from "@remix-run/node";
 import {
   Link,
   Links,
@@ -8,6 +14,7 @@ import {
   ScrollRestoration,
   useCatch,
   useLocation,
+  useMatches,
   useNavigate,
 } from "@remix-run/react";
 import SUIStyles from "semantic-ui-css/semantic.min.css";
@@ -18,9 +25,9 @@ import { DesktopSidebar, MobileSidebar } from "./components/shared/Sidebar";
 import React from "react";
 import { Button } from "semantic-ui-react";
 import ErrorBoundaryView from "./components/views/ErrorBoundary";
-import { UserProvider, useUser } from "./context/user";
 import PageLoadingMessage from "./components/shared/PageLoadingMessage";
-import * as Firebase from "~/services/firebase";
+import * as Cookies from "~/services/cookies";
+import type { User } from "./types";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: SUIStyles, as: "style" }];
@@ -30,29 +37,35 @@ export const meta: MetaFunction = () => {
   return { charset: "utf-8", description: `Recipe Manager` };
 };
 
-function useAuthentication() {
-  const {
-    actions: { setUser },
-  } = useUser();
+export const handle = {
+  id: "root",
+};
 
-  React.useEffect(() => {
-    const unsubscribe = Firebase.onAuthStateChanged(async (user) => {
-      setUser(user);
-    });
+export async function loader({ request }: LoaderArgs) {
+  const data: { user: User | null } = { user: null };
+  try {
+    data.user = await Cookies.getAuthenticatedUser(request);
+  } finally {
+    return json(data);
+  }
+}
 
-    return function onUnmount() {
-      if (typeof unsubscribe === "function") {
-        unsubscribe();
-      }
-    };
-  }, [setUser]);
+export function useRootData() {
+  const matches = useMatches();
+  const match = matches.find(({ handle }) => handle?.id === "root");
+  if (!match) {
+    throw new Error(`No active route for handle ID "root"`);
+  }
+  return match.data as SerializeFrom<typeof loader>;
 }
 
 function App() {
-  useAuthentication();
   return (
     <Document>
-      <Media lessThan="computer">
+      <Media
+        lessThan="computer"
+        // style={{ padding: 0, background: "red", marginBottom: 0 }}
+      >
         <Header />
       </Media>
 
@@ -94,6 +107,8 @@ function Document({ children }: { children: React.ReactNode }) {
 
 export function CatchBoundary() {
   const caught = useCatch();
+  console.log("Caught Boundary:", caught);
+
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -129,6 +144,7 @@ export function CatchBoundary() {
 
 export function ErrorBoundary({ error }: { error: Error }) {
   const { pathname } = useLocation();
+  console.log("RootErrorBoundary", error);
   return (
     <Document>
       <ErrorBoundaryView
@@ -152,11 +168,9 @@ export function ErrorBoundary({ error }: { error: Error }) {
 export default function AppWithProviders() {
   return (
     <MediaContextProvider>
-      <UserProvider>
-        <SidebarProvider>
-          <App />
-        </SidebarProvider>
-      </UserProvider>
+      <SidebarProvider>
+        <App />
+      </SidebarProvider>
     </MediaContextProvider>
   );
 }

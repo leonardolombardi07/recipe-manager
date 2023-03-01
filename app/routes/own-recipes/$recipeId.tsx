@@ -26,6 +26,7 @@ export default function OwnRecipesRecipeRoute() {
       canGoBack={true}
       canDelete={true}
       canEdit={true}
+      canRate={false}
     />
   );
 }

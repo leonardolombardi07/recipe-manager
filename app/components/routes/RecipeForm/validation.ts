@@ -12,6 +12,8 @@ function validateTitle(title: FormDataEntryValue | null) {
   if (title.length < 3) {
     return `Title "${title}" must have at least 3 characters`;
   }
+
+  return null;
 }
 
 function validateDescription(description: FormDataEntryValue | null) {
@@ -22,14 +24,18 @@ function validateDescription(description: FormDataEntryValue | null) {
   if (description && description.length < 3) {
     return `Description "${description}" must have at least 3 characters"`;
   }
+
+  return null;
 }
 
-function validateImage(image: { url: FormDataEntryValue | null }) {
-  if (!image.url) return;
+function validateImage(image: string | null) {
+  if (!image) return null;
 
-  if (typeof image.url !== "string") {
-    return `Image URL "${image.url} must be a valid image"`;
+  if (typeof image !== "string") {
+    return `Image "${image} must be a string"`;
   }
+
+  return null;
 }
 
 function validateTime(
@@ -49,12 +55,16 @@ function validateTime(
   if (unit === "hours" && (convertedValue > 24 || convertedValue < 0)) {
     return `${label} must be a number between 0 and 24`;
   }
+
+  return null;
 }
 
 function validateExtraTime(extraTime: FormDataEntryValue | null) {
   if (extraTime && typeof extraTime !== "string") {
     return `Extra time "${extraTime}" must be a string`;
   }
+
+  return null;
 }
 
 function validateDifficulty(difficulty: FormDataEntryValue | null) {
@@ -68,6 +78,8 @@ function validateDifficulty(difficulty: FormDataEntryValue | null) {
       ", "
     )}"`;
   }
+
+  return null;
 }
 
 function validateIngredients(ingredients: FormDataEntryValue[]) {
@@ -78,6 +90,8 @@ function validateIngredients(ingredients: FormDataEntryValue[]) {
   ) {
     return `Ingredients must be strings and be less than 30 characters`;
   }
+
+  return null;
 }
 
 function validateSteps(steps: FormDataEntryValue[]) {
@@ -88,6 +102,8 @@ function validateSteps(steps: FormDataEntryValue[]) {
   ) {
     return `Steps must be strings and be less than 100 characters`;
   }
+
+  return null;
 }
 
 function validateServingType(type: FormDataEntryValue | null) {
@@ -101,6 +117,8 @@ function validateServingType(type: FormDataEntryValue | null) {
       ", "
     )}`;
   }
+
+  return null;
 }
 
 function validateServingValue(value: FormDataEntryValue | null) {
@@ -111,6 +129,8 @@ function validateServingValue(value: FormDataEntryValue | null) {
   if (value && typeof value !== "string") {
     return `Serving value "${value} must be a string`;
   }
+
+  return null;
 }
 
 function validateAuthor(author: { id: string; name: string }) {
@@ -119,8 +139,10 @@ function validateAuthor(author: { id: string; name: string }) {
   }
 
   if (!author.name || typeof author.name !== "string") {
-    return `Author nae "${author.name} must be a string"`;
+    return `Author name "${author.name} must be a string"`;
   }
+
+  return null;
 }
 
 export {

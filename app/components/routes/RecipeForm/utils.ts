@@ -11,7 +11,7 @@ import {
   validateTime,
   validateTitle,
 } from "./validation";
-import { someError } from "~/utils/errors";
+import { hasTruthyValue } from "~/utils/errors";
 import type { Recipe, User } from "types";
 
 type ValidatedForm =
@@ -84,7 +84,7 @@ function validateForm(form: Form) {
   const errors = {
     title: validateTitle(form.title),
     description: validateDescription(form.description),
-    image: validateImage(form.image),
+    image: validateImage(form.image.url),
     timings: {
       prepTime: {
         hours: validateTime(prepTime.hours, "Prep time hours", "hours"),
@@ -106,7 +106,7 @@ function validateForm(form: Form) {
     author: validateAuthor(form.author),
   };
 
-  return { hasErrors: someError(errors), errors };
+  return { hasErrors: hasTruthyValue(errors), errors };
 }
 
 export { getValidatedForm };

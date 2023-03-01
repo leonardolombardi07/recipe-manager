@@ -6,7 +6,7 @@ import { connectFirestoreEmulator } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import type { Auth } from "firebase/auth";
 import { connectAuthEmulator } from "firebase/auth";
-// import { inMemoryPersistence, setPersistence } from "firebase/auth";
+import { inMemoryPersistence, setPersistence } from "firebase/auth";
 import type { FirebaseStorage } from "firebase/storage";
 import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
@@ -33,7 +33,7 @@ function getFirebaseAuth(app: FirebaseApp) {
 
   // TODO:  we can't seem to use the emulator by setting persistence
   // Let Remix handle the persistence via session cookies
-  // setPersistence(auth, inMemoryPersistence);
+  setPersistence(auth, inMemoryPersistence);
   return auth;
 }
 

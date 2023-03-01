@@ -1,7 +1,16 @@
 import type { User } from "types";
 import { getServices } from "./app.server";
+import type { UpdateRequest } from "firebase-admin/auth";
 
 const { auth } = getServices();
+
+async function signIn(idToken: string, expiresIn: number) {
+  await auth.verifyIdToken(idToken);
+  const jwt = await auth.createSessionCookie(idToken, {
+    expiresIn,
+  });
+  return jwt;
+}
 
 async function getAuthenticatedUser(jwt: string): Promise<User> {
   const { uid } = await auth.verifySessionCookie(jwt);
@@ -18,12 +27,9 @@ async function getAuthenticatedUser(jwt: string): Promise<User> {
   };
 }
 
-async function signIn(idToken: string, expiresIn: number) {
-  await auth.verifyIdToken(idToken);
-  const jwt = await auth.createSessionCookie(idToken, {
-    expiresIn,
-  });
-  return jwt;
+async function updateUser(jwt: string, properties: UpdateRequest) {
+  const { uid } = await auth.verifySessionCookie(jwt);
+  return auth.updateUser(uid, properties);
 }
 
-export { getAuthenticatedUser, signIn };
+export { getAuthenticatedUser, signIn, updateUser };

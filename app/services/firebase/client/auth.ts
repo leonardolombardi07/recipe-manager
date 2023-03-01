@@ -1,4 +1,5 @@
 import type { NextOrObserver, User } from "firebase/auth";
+import { updateProfile as firebaseUpdateProfile } from "firebase/auth";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -21,4 +22,14 @@ function onAuthStateChanged(nextOrObserver: NextOrObserver<User>) {
   return firebaseOnAuthStateChanged(auth, nextOrObserver);
 }
 
-export { signInWithGoogle, signOut, onAuthStateChanged };
+async function updateProfile(info: {
+  displayName?: string | null;
+  photoURL?: string | null;
+}) {
+  if (!auth.currentUser) throw new Error("No authenticated user");
+  await firebaseUpdateProfile(auth.currentUser, info);
+  await auth.currentUser.reload();
+  return auth.currentUser;
+}
+
+export { updateProfile, signInWithGoogle, signOut, onAuthStateChanged };

@@ -7,7 +7,7 @@ function isNumeric(value: any) {
 
 function extractNumber(string: string) {
   const matches = string.match(/\d+/);
-  if (matches) return matches[0];
+  if (matches) return Number(matches[0]);
   return null;
 }
 

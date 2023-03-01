@@ -24,6 +24,7 @@ export default function SavedRecipesRecipeRoute() {
     <RecipeRoute
       recipe={data.recipe}
       canGoBack={true}
+      canRate={true}
       canDelete={false}
       canEdit={false}
     />

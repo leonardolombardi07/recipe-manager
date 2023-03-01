@@ -1,6 +1,6 @@
 import { iconStyle, disabledIconStyle, svgStyle } from "./styles";
 
-const darkSvg = (
+const DarkSvg = () => (
   <svg
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
@@ -110,7 +110,7 @@ const darkSvg = (
   </svg>
 );
 
-const lightSvg = (
+const LightSvg = () => (
   <svg
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
@@ -213,7 +213,7 @@ const lightSvg = (
   </svg>
 );
 
-const disabledSvg = (
+const DisabledSvg = () => (
   <svg
     width="46px"
     height="46px"
@@ -263,7 +263,7 @@ export const GoogleIcon = ({ disabled, type }: any) => (
       !disabled ? iconStyle : ({ ...iconStyle, ...disabledIconStyle } as any)
     }
   >
-    {!disabled ? (type === "dark" ? darkSvg : lightSvg) : disabledSvg}
+    {!disabled ? type === "dark" ? <DarkSvg /> : <LightSvg /> : <DisabledSvg />}
   </div>
 );
 

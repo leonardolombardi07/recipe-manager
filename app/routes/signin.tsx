@@ -37,7 +37,7 @@ export default function SignInRoute() {
 
   return (
     <Segment style={{ height: "100vh" }}>
-      <fetcher.Form method="post">
+      <fetcher.Form method="post" reloadDocument>
         <Segment>
           <Header as="h1">Sign in</Header>
           <GoogleButton onClick={onGoogleSignIn} />

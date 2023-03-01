@@ -1,4 +1,3 @@
 export * from "./auth";
-export * from "./users";
-export * from "./recipes";
+export * from "./firestore";
 export * from "./storage";

@@ -1,12 +1,9 @@
 import { Form } from "@remix-run/react";
-import { Segment, Form as SUIForm, Button } from "semantic-ui-react";
-import { useUser } from "~/context/user";
+import { Segment, Form as SUIForm } from "semantic-ui-react";
+import { useRootData } from "~/root";
 
 export default function SettingsPersonalDetailsRoute() {
-  const {
-    state: { user },
-  } = useUser();
-
+  const { user } = useRootData();
   return (
     <Segment basic style={{ padding: 0 }}>
       <p>
@@ -21,16 +18,7 @@ export default function SettingsPersonalDetailsRoute() {
             label="Email address"
             readonly={true}
           />
-
-          <SUIForm.Input
-            label="Phone number"
-            defaultValue={user?.phoneNumber}
-          />
         </SUIForm.Group>
-
-        <Button type="submit" primary>
-          Save changes
-        </Button>
       </SUIForm>
     </Segment>
   );

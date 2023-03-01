@@ -9,59 +9,31 @@ import {
   where,
 } from "firebase/firestore";
 import type { Recipe } from "types";
-import { getServices } from "./app";
-import { COLLECTION } from "../constants";
-import { getUserSavedRecipes } from "./users";
-import { createTypedCollection } from "../utils";
+import { getUserRatedRecipes, getUserSavedRecipes } from "../users";
+import { TRENDING_RECIPES } from "../data";
+import { getCollections } from "../utils";
 
-const { firestore } = getServices();
-
-const recipesCol = createTypedCollection<Recipe>(firestore, "recipes");
+export const { recipesCol } = getCollections();
 
 async function createRecipe(form: Recipe) {
-  const { prepTime, cookTime, extraTime } = form.timings;
-
-  const validRecipe: Recipe = {
-    title: form.title || "",
-    description: form.description || "",
-    image: { url: form.image.url || "" },
-    timings: {
-      prepTime: { hours: prepTime.hours || 0, minutes: prepTime.minutes || 0 },
-      cookTime: { hours: cookTime.hours || 0, minutes: cookTime.minutes || 0 },
-      extraTime: extraTime || "",
-    },
-    difficulty: form.difficulty || "easy",
-    ingredients: form.ingredients || [],
-    steps: form.steps || [],
-    servings: {
-      type: form.servings.type || "serves",
-      value: form.servings.value || "",
-    },
-    rating: {
-      count: 0,
-      average: 0,
-    },
-    author: {
-      id: form.author.id || "anonymous", // generate random id?
-      name: form.author.name || "Anonymous",
-    },
-  };
-
   const newDoc = doc(recipesCol);
-  setDoc(newDoc, validRecipe);
+  setDoc(newDoc, {
+    ...form,
+    rating: { average: 0, count: 0 },
+  });
   return newDoc.id;
 }
 
 async function editRecipe(id: string, form: Partial<Recipe>) {
-  setDoc(doc(firestore, `${COLLECTION.RECIPES}/${id}`), form, {
+  setDoc(doc(recipesCol, id), form, {
     merge: true,
   });
 }
 
 async function getFeedRecipes(uid: string | null) {
   const feedQuery = uid
-    ? query(recipesCol, where("author.id", "!=", uid))
-    : query(recipesCol);
+    ? query(recipesCol, where("author.id", "not-in", [uid, "admin"]))
+    : query(recipesCol, where("author.id", "!=", "admin"));
   const snap = await getDocs(feedQuery);
   const recipes = snap.docs.map(function getData(doc) {
     return { ...doc.data(), id: doc.id };
@@ -81,7 +53,8 @@ async function getOwnRecipes(uid: string) {
 
 async function getSavedRecipes(uid: string) {
   const savedRecipes = await getUserSavedRecipes(uid);
-  if (!savedRecipes || savedRecipes.length === 0) return [];
+  if (savedRecipes.length === 0) return [];
+
   const recipesSnap = await getDocs(
     query(recipesCol, where(documentId(), "in", savedRecipes))
   );
@@ -90,17 +63,50 @@ async function getSavedRecipes(uid: string) {
   });
 }
 
+async function getRecipeWithUserInfo(recipeId: string, uid: string) {
+  const ratedRecipes = await getUserRatedRecipes(uid);
+  if (!ratedRecipes) return [];
+
+  const recipe = await getRecipe(recipeId);
+  const foundRatedRecipe = ratedRecipes.find((rated) => rated.id === recipeId);
+  return {
+    ...recipe,
+    userRating: foundRatedRecipe?.rating || null,
+  };
+}
+
 async function getRecipe(id: string) {
-  const recipeSnap = await getDoc(
-    doc(firestore, `${COLLECTION.RECIPES}/${id}`)
-  );
+  const recipeSnap = await getDoc(doc(recipesCol, id));
   if (!recipeSnap.exists())
     throw new Error(`Recipe with id ${id} doesn't exist`);
   return { ...recipeSnap.data(), id };
 }
 
 async function deleteRecipe(id: string) {
-  return deleteDoc(doc(firestore, `${COLLECTION.RECIPES}/${id}`));
+  return deleteDoc(doc(recipesCol, id));
+}
+
+async function getTrendingRecipes(uid: string) {
+  const userSavedRecipes = (await getUserSavedRecipes(uid)) || [];
+
+  // Create on database if they don't exist!
+  for (const RECIPE of TRENDING_RECIPES) {
+    try {
+      await getRecipe(RECIPE.id);
+    } catch (error: any) {
+      if (error.message === `Recipe with id ${RECIPE.id} doesn't exist`) {
+        const newDoc = doc(recipesCol, RECIPE.id);
+        setDoc(newDoc, RECIPE);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  return TRENDING_RECIPES.map((RECIPE) => ({
+    ...RECIPE,
+    saved: userSavedRecipes.includes(RECIPE.id),
+  }));
 }
 
 export {
@@ -111,4 +117,6 @@ export {
   getSavedRecipes,
   deleteRecipe,
   editRecipe,
+  getTrendingRecipes,
+  getRecipeWithUserInfo,
 };

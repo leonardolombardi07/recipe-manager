@@ -57,7 +57,10 @@ async function getAuthenticatedUser(request: Request) {
     if (!jwt) throw new Error();
     const user = await Firebase.Server.getAuthenticatedUser(jwt);
     if (!user) throw new Error();
-    return user;
+    return {
+      jwt,
+      ...user,
+    };
   } catch (error) {
     throw unauthorized(`User not authenticated`);
   }

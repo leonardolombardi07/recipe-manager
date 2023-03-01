@@ -3,7 +3,8 @@ import { getServices } from "./app";
 
 const { storage } = getServices();
 
-type RefUrl = `images/recipes/${string}`;
+type Folder = "recipes" | "users";
+type RefUrl = `images/${Folder}/${string}`;
 
 async function uploadImage(
   refUrl: RefUrl,

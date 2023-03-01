@@ -11,7 +11,6 @@ import {
   Icon,
 } from "semantic-ui-react";
 import RecipeCard from "~/components/views/RecipeCard";
-import { FAKE_RECIPE } from "~/data";
 import * as Firebase from "~/services/firebase";
 import * as Cookies from "~/services/cookies";
 import type { Recipe } from "types";
@@ -33,7 +32,7 @@ export async function action({ request }: ActionArgs) {
 
   if (intent === "saveRecipe") await Firebase.saveRecipe(recipeId, uid);
   else if (intent === "unsaveRecipe")
-    await Firebase.unSaveRecipe(recipeId, uid);
+    await Firebase.unsaveRecipe(recipeId, uid);
 
   return {};
 }
@@ -41,7 +40,7 @@ export async function action({ request }: ActionArgs) {
 export async function loader({ request }: LoaderArgs) {
   const { uid } = await Cookies.getAuthenticatedUser(request);
   return json({
-    trending: Array.from(Array(2).keys()),
+    trending: await Firebase.getTrendingRecipes(uid),
     feed: await Firebase.getFeedRecipes(uid),
   });
 }
@@ -51,22 +50,57 @@ export default function HomeRoute() {
   return (
     <Segment padded style={{ minHeight: "100vh" }}>
       <Header as="h1">Home</Header>
-      <ScrollableRecipeList
-        header="Recommended"
-        data={Array.from(Array(10).keys())}
-      />
-      <Feed data={data.feed} />
       <ScrollableRecipeList header="Trending" data={data.trending} />
+
+      <Feed data={data.feed} />
     </Segment>
   );
 }
 
+function useToggleSaveRecipe() {
+  const submit = useSubmit();
+  const navigation = useNavigation();
+
+  function onToggleRecipeSave(recipe: SavableRecipe) {
+    submit(
+      {
+        intent: recipe.saved ? "unsaveRecipe" : "saveRecipe",
+        recipeId: recipe.id as string,
+      },
+      // To understand why we add an "?" on the action:
+      // From https://remix.run/docs/en/v1/components/form
+      // "If you want to post to an index route use ?index in the action"
+      // See also: https://stackoverflow.com/questions/72528682/remix-run-submitting-an-action-and-getting-errro-root-does-not-have-an-act
+      { method: "post", action: "/home?index" }
+    );
+  }
+
+  function markRecipeAsSaved(recipe: SavableRecipe) {
+    const formData = navigation.formData;
+    if (formData && formData.get("recipeId") === recipe.id) {
+      switch (formData.get("intent")) {
+        case "saveRecipe":
+          return true;
+        case "unsaveRecipe":
+          return false;
+      }
+    }
+    return recipe.saved;
+  }
+
+  return { onToggleRecipeSave, markRecipeAsSaved };
+}
+
+type SavableRecipe = Recipe & { saved: boolean };
+
 interface ScrollableRecipeListProps {
-  data: any[];
+  data: SavableRecipe[];
   header: string;
 }
 
 function ScrollableRecipeList({ data, header }: ScrollableRecipeListProps) {
+  const { onToggleRecipeSave, markRecipeAsSaved } = useToggleSaveRecipe();
+
   const listRef = React.useRef<HTMLDivElement>(null);
 
   const [renderLeftArrowButton, setRenderLeftArrowButton] =
@@ -74,7 +108,7 @@ function ScrollableRecipeList({ data, header }: ScrollableRecipeListProps) {
   const [renderRightArrowButton, setRenderRightArrowButton] =
     React.useState(true);
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     if (!listRef.current) return;
     const list = listRef.current;
 
@@ -139,8 +173,12 @@ function ScrollableRecipeList({ data, header }: ScrollableRecipeListProps) {
         ref={listRef}
       >
         {data.map((recipe) => (
-          <div key={recipe} style={{ marginRight: 50 }}>
-            <RecipeCard {...FAKE_RECIPE} />
+          <div key={recipe.id} style={{ marginRight: 30, maxWidth: 200 }}>
+            <RecipeCard.Savable
+              onToggleSave={() => onToggleRecipeSave(recipe)}
+              {...recipe}
+              saved={markRecipeAsSaved(recipe)}
+            />
           </div>
         ))}
       </div>
@@ -167,43 +205,12 @@ function ScrollableRecipeList({ data, header }: ScrollableRecipeListProps) {
   );
 }
 
-type SavableRecipe = Recipe & { saved: boolean };
-
 interface FeedProps {
   data: SavableRecipe[];
 }
 
 function Feed({ data }: FeedProps) {
-  const submit = useSubmit();
-  const navigation = useNavigation();
-
-  function onToggleRecipeSave(recipe: SavableRecipe) {
-    submit(
-      {
-        intent: recipe.saved ? "unsaveRecipe" : "saveRecipe",
-        recipeId: recipe.id as string,
-      },
-      // To understand why we add an "?" on the action:
-      // From https://remix.run/docs/en/v1/components/form
-      // "If you want to post to an index route use ?index in the action"
-      // See also: https://stackoverflow.com/questions/72528682/remix-run-submitting-an-action-and-getting-errro-root-does-not-have-an-act
-      { method: "post", action: "/home?index" }
-    );
-  }
-
-  function recipeSaveState(recipe: SavableRecipe) {
-    const formData = navigation.formData;
-    if (formData && formData.get("recipeId") === recipe.id) {
-      switch (formData.get("intent")) {
-        case "saveRecipe":
-          return true;
-        case "unsaveRecipe":
-          return false;
-      }
-    }
-    return recipe.saved;
-  }
-
+  const { onToggleRecipeSave, markRecipeAsSaved } = useToggleSaveRecipe();
   return (
     <Segment style={{ margin: "2em 0" }}>
       <Header as="h1">Feed</Header>
@@ -215,7 +222,7 @@ function Feed({ data }: FeedProps) {
             <RecipeCard.Savable
               onToggleSave={() => onToggleRecipeSave(recipe)}
               {...recipe}
-              saved={recipeSaveState(recipe)}
+              saved={markRecipeAsSaved(recipe)}
             />
           </Grid.Column>
         ))}
