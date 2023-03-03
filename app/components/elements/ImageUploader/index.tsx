@@ -62,6 +62,7 @@ export default function ImageUploader({
         marginLeft: "auto",
         marginRight: "auto",
         width,
+        minHeight: 250,
       }}
     >
       <Card.Content

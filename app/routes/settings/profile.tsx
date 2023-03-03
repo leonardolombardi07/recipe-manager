@@ -24,16 +24,14 @@ export async function action({ request }: ActionArgs) {
   // The validation happened on the client because
   // at this point we already uploaded an image to the database
   const displayName = String(formData.get("displayName"));
-
-  let photoURL = formData.get("photoURL");
-  if (typeof photoURL !== "string") {
-    photoURL = "";
-  }
+  const photoURL = formData.get("photoURL");
 
   const user = await Cookies.getAuthenticatedUser(request);
   await Firebase.Server.updateUser(user.jwt, {
     displayName,
-    photoURL,
+    photoURL:
+      // undefined means we are not updating the photoURL
+      typeof photoURL === "string" && photoURL !== "" ? photoURL : undefined,
   });
 
   return null;
