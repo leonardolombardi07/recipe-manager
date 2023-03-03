@@ -19,13 +19,16 @@ import {
 } from "@remix-run/react";
 import SUIStyles from "semantic-ui-css/semantic.min.css";
 import { SidebarProvider } from "./context/sidebar";
-import { MediaContextProvider, Media } from "~/services/media";
-import Header from "./components/shared/Header";
-import { DesktopSidebar, MobileSidebar } from "./components/shared/Sidebar";
+import { MediaContextProvider, Media, mediaStyle } from "~/services/media";
+import Header from "./components/routes/root/Header";
+import {
+  DesktopSidebar,
+  MobileSidebar,
+} from "./components/routes/root/Sidebar";
 import React from "react";
 import { Button } from "semantic-ui-react";
 import ErrorBoundaryView from "./components/views/ErrorBoundary";
-import PageLoadingMessage from "./components/shared/PageLoadingMessage";
+import PageLoadingMessage from "./components/routes/root/PageLoadingMessage";
 import * as Cookies from "~/services/cookies";
 import type { User } from "./types";
 
@@ -37,10 +40,6 @@ export const meta: MetaFunction = () => {
   return { charset: "utf-8", description: `Recipe Manager` };
 };
 
-export const handle = {
-  id: "root",
-};
-
 export async function loader({ request }: LoaderArgs) {
   const data: { user: User | null } = { user: null };
   try {
@@ -49,6 +48,8 @@ export async function loader({ request }: LoaderArgs) {
     return json(data);
   }
 }
+
+export const handle = { id: "root" };
 
 export function useRootData() {
   const matches = useMatches();
@@ -88,11 +89,11 @@ function Document({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <title>Recipe Manager</title>
         <Links />
+        <style type="text/css">${mediaStyle}</style>
       </head>
 
       <body>
         {children}
-
         <PageLoadingMessage />
         <LiveReload />
         <ScrollRestoration />

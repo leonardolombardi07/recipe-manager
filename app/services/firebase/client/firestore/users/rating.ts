@@ -67,7 +67,7 @@ async function rateRecipe(recipeId: string, uid: string, rating: RatingValue) {
 
     const { rating: oldRating } = recipeRatedInThePast;
     const count = isClearing
-      ? oldCount - 1 // One less
+      ? oldCount - 1 //
       : oldCount; // We add one rating, but delete the previous. So it's the same count
 
     transaction.update(recipeDoc, {

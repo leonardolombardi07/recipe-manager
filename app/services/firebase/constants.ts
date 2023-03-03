@@ -1,4 +1,6 @@
-export const COLLECTION = {
+import type { CollectionName } from "./types";
+
+export const COLLECTION: { [key: string]: CollectionName } = {
   USERS: "users",
   RECIPES: "recipes",
 };
