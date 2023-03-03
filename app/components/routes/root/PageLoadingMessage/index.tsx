@@ -1,7 +1,7 @@
 import { useTransition } from "@remix-run/react";
 import React from "react";
 import { Icon, Message } from "semantic-ui-react";
-import { useSpinDelay } from "~/utils/hooks";
+import useSpinDelay from "~/components/hooks/useSpinDelay";
 
 const LOADER_WORDS = [
   "loading",

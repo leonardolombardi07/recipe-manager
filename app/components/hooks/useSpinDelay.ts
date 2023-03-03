@@ -50,4 +50,4 @@ function useSpinDelay(loading: boolean, options?: SpinDelayOptions): boolean {
   return state === "DISPLAY" || state === "EXPIRE";
 }
 
-export { useSpinDelay };
+export default useSpinDelay;
