@@ -1,5 +1,5 @@
 import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import RecipeRoute, {
   meta as recipeRouteMeta,
   action as recipeRouteAction,
@@ -20,10 +20,12 @@ export async function loader(loaderArgs: LoaderArgs) {
 
 export default function OwnRecipesRecipeRoute() {
   const data = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
   return (
     <RecipeRoute
       recipe={data.recipe}
       canGoBack={true}
+      onGoBack={() => navigate("/own-recipes")}
       canDelete={true}
       canEdit={true}
       canRate={false}

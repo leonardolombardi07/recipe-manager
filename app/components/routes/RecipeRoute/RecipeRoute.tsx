@@ -140,6 +140,7 @@ interface RecipeRouteProps extends RecipeProps {
   canDelete: boolean;
   canEdit: boolean;
   canGoBack: boolean;
+  onGoBack?: () => void;
   canRate: boolean;
 }
 
@@ -235,13 +236,19 @@ function HeaderMenu({
   canDelete,
   canEdit,
   canGoBack,
+  onGoBack,
 }: RecipeRouteProps) {
   const navigate = useNavigate();
+
+  function handleGoBack() {
+    if (onGoBack) onGoBack();
+    else navigate(-1);
+  }
 
   return (
     <Menu style={{ marginBottom: 0 }} size="huge">
       {canGoBack && (
-        <Menu.Item onClick={() => navigate(-1)}>
+        <Menu.Item onClick={handleGoBack}>
           <Button icon style={{ backgroundColor: "transparent" }}>
             <Icon name="arrow left" />
           </Button>

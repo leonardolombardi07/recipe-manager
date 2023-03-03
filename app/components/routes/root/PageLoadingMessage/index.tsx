@@ -2,6 +2,7 @@ import { useTransition } from "@remix-run/react";
 import React from "react";
 import { Icon, Message } from "semantic-ui-react";
 import useSpinDelay from "~/components/hooks/useSpinDelay";
+import { Media } from "~/services/media";
 
 const LOADER_WORDS = [
   "loading",
@@ -61,17 +62,66 @@ export default function PageLoadingMessage() {
 
   const word = words[0];
   return (
+    <React.Fragment>
+      <Media at="mobile">
+        <MobileMessageContainer>
+          <MessageContent word={word} />
+        </MobileMessageContainer>
+      </Media>
+
+      <Media greaterThan="mobile">
+        <DesktopMessageContainer>
+          <MessageContent word={word} />
+        </DesktopMessageContainer>
+      </Media>
+    </React.Fragment>
+  );
+}
+
+interface MessageContainerProps {
+  children: React.ReactNode;
+}
+
+function MobileMessageContainer({ children }: MessageContainerProps) {
+  return (
     <Message
       icon
-      style={{ position: "fixed", bottom: 0, right: 25, width: 500 }}
+      style={{
+        position: "fixed",
+        bottom: 25,
+        width: "90vw",
+        left: "50%",
+        marginLeft: "-45vw",
+      }}
       info
       size="big"
     >
+      {children}
+    </Message>
+  );
+}
+
+function DesktopMessageContainer({ children }: MessageContainerProps) {
+  return (
+    <Message
+      icon
+      style={{ position: "fixed", bottom: 25, left: 25, width: 500 }}
+      info
+      size="big"
+    >
+      {children}
+    </Message>
+  );
+}
+
+function MessageContent({ word }: { word: string }) {
+  return (
+    <React.Fragment>
       <Icon name="circle notched" loading />
       <Message.Content>
         <Message.Header>{word}</Message.Header>
         We are fetching that content for you.
       </Message.Content>
-    </Message>
+    </React.Fragment>
   );
 }
