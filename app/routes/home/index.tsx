@@ -1,6 +1,6 @@
 import type { ActionArgs, LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import React from "react";
 import {
   Segment,
@@ -58,11 +58,10 @@ export default function HomeRoute() {
 }
 
 function useToggleSaveRecipe() {
-  const submit = useSubmit();
-  const navigation = useNavigation();
+  const fetcher = useFetcher();
 
   function onToggleRecipeSave(recipe: SavableRecipe) {
-    submit(
+    fetcher.submit(
       {
         intent: recipe.saved ? "unsaveRecipe" : "saveRecipe",
         recipeId: recipe.id as string,
@@ -76,7 +75,7 @@ function useToggleSaveRecipe() {
   }
 
   function markRecipeAsSaved(recipe: SavableRecipe) {
-    const formData = navigation.formData;
+    const formData = fetcher.submission?.formData;
     if (formData && formData.get("recipeId") === recipe.id) {
       switch (formData.get("intent")) {
         case "saveRecipe":
