@@ -1,1 +1,4 @@
-export { default as RecipeRoute } from "./RecipeRoute";
+import RecipeRoute from "./RecipeRoute";
+
+export * from "./RecipeRoute";
+export default RecipeRoute;

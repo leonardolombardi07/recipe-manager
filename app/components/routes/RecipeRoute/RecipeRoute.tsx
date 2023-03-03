@@ -6,7 +6,15 @@ import type {
 } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { Link, useLocation, useNavigate, useSubmit } from "@remix-run/react";
+import {
+  Link,
+  useActionData,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+  useNavigation,
+  useSubmit,
+} from "@remix-run/react";
 import React from "react";
 import {
   Segment,
@@ -20,6 +28,7 @@ import {
   Menu,
   Message,
   Label,
+  Loader,
 } from "semantic-ui-react";
 import type { Recipe } from "types";
 import * as Firebase from "~/services/firebase";
@@ -27,9 +36,12 @@ import { badRequest } from "~/utils/action";
 import Confirm from "~/components/addons/Confirm";
 import { capitalizeFirstLetter } from "~/utils/string";
 import { extractNumber, isNumeric } from "~/utils/number";
+import * as Cookies from "~/services/cookies";
+import type { RatingValue } from "~/services/firebase";
+import useSpinDelay from "~/components/hooks/useSpinDelay";
 
 // TODO: fix type on parameters
-export const meta: MetaFunction<typeof loader> = ({ data, params }: any) => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data) {
     return { title: "No recipe", description: "No recipe found" };
   }
@@ -40,11 +52,16 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }: any) => {
   };
 };
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ request, params }: LoaderArgs) {
   if (!params.recipeId) {
     throw badRequest("No recipe id found!");
   }
-  const recipe = await Firebase.getRecipe(params.recipeId);
+
+  const user = await Cookies.getAuthenticatedUser(request);
+  const recipe = await Firebase.getRecipeWithUserInfo(
+    params.recipeId,
+    user.uid
+  );
   if (!recipe) {
     throw badRequest(`Recipe for  recipe id "${params.recipeId}" not found`);
   }
@@ -52,29 +69,66 @@ export async function loader({ params }: LoaderArgs) {
   // Fix: something related to
   // https://github.com/remix-run/remix/issues/3931
   // We don't get correct types when importing the loader
-  return json({ recipe }) as TypedResponse<{ recipe: Recipe }>;
+  return json({ recipe }) as TypedResponse<{
+    recipe: Recipe & { userRating: number | null };
+  }>;
 }
 
-export async function action({ request }: ActionArgs) {
+const ACTION_INTENTS = {
+  DELETE_RECIPE: "deleteRecipe",
+  RATE_RECIPE: "rateRecipe",
+} as const;
+
+type ActionIntent = typeof ACTION_INTENTS[keyof typeof ACTION_INTENTS];
+
+export async function action({ request, params }: ActionArgs) {
   const formData = await request.formData();
-  const intent = String(formData.get("intent"));
-  if (!["deleteRecipe"].includes(intent)) {
-    return badRequest(`The intent "${intent}" is not supported`);
-  }
 
-  const recipeId = String(formData.get("recipeId"));
+  const recipeId = String(params.recipeId);
   if (!recipeId) {
-    throw badRequest(`The recipe id "${recipeId}" is not valid`);
+    throw badRequest({ error: `The recipe id "${recipeId}" is not valid` });
   }
 
-  switch (intent) {
-    case "deleteRecipe": {
+  const intent = String(formData.get("intent"));
+  switch (intent as ActionIntent) {
+    case "deleteRecipe":
       await Firebase.deleteRecipe(recipeId);
       // TODO: we actually want to navigate to the last route
       // But the user can only delete it's own recipes so that's
       // not a big problem now
       return redirect("/own-recipes");
-    }
+
+    case "rateRecipe":
+      const user = await Cookies.getAuthenticatedUser(request);
+      const rating = Number(formData.get("rating"));
+      if (!isNumeric(rating) || rating < 0 || rating > 5) {
+        return badRequest({
+          error: `The rating must be a number between 0 and 5. Rating "${rating}" provided is not valid`,
+        });
+      }
+
+      try {
+        await wait(5000);
+        await Firebase.rateRecipe(recipeId, user.uid, rating as RatingValue);
+        return json({ error: null });
+      } catch (error: any) {
+        return badRequest({ error: error?.message || "Unknown error" });
+      }
+
+    default:
+      if (!Object.values(ACTION_INTENTS).includes(intent as any)) {
+        throw badRequest({ error: `The intent "${intent}" is not supported` });
+      }
+  }
+
+  return json({ error: null });
+
+  function wait(ms: number) {
+    return new Promise((r, reject) => {
+      setTimeout(() => {
+        r("");
+      }, ms);
+    });
   }
 }
 
@@ -86,24 +140,38 @@ interface RecipeRouteProps extends RecipeProps {
   canDelete: boolean;
   canEdit: boolean;
   canGoBack: boolean;
+  canRate: boolean;
 }
 
 export default function RecipeRoute(props: RecipeRouteProps) {
-  const { recipe } = props;
+  const rateRecipeRef = React.useRef<HTMLDivElement>(null);
 
+  function scrollToRateRecipe() {
+    if (rateRecipeRef.current) {
+      rateRecipeRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  const { recipe, canRate } = props;
   return (
     <Segment style={{ padding: 0, minHeight: "100vh" }}>
       <HeaderMenu {...props} />
 
       <Segment basic>
         <Grid columns={2} style={{ marginBottom: 20 }} stackable centered>
-          <Grid.Column width={4}>
-            <div>
+          <Grid.Column width={5}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Image src={recipe?.image?.url} style={{ maxHeight: 500 }} />
             </div>
           </Grid.Column>
 
-          <Grid.Column width={7}>
+          <Grid.Column width={8}>
             <Header as="h1">
               {recipe.title}
               <Header.Subheader>
@@ -115,8 +183,19 @@ export default function RecipeRoute(props: RecipeRouteProps) {
                   maxRating={5}
                   disabled
                 />
-                {isNumeric(recipe.rating?.count) && (
-                  <span>{recipe.rating?.count} ratings</span>
+                {canRate && isNumeric(recipe.rating?.count) && (
+                  <React.Fragment>
+                    <span>{recipe.rating?.count || 0} ratings </span>
+                    <Button
+                      size="tiny"
+                      basic
+                      color="blue"
+                      style={{ marginLeft: 5 }}
+                      onClick={scrollToRateRecipe}
+                    >
+                      Rate
+                    </Button>
+                  </React.Fragment>
                 )}
               </Header.Subheader>
             </Header>
@@ -140,9 +219,13 @@ export default function RecipeRoute(props: RecipeRouteProps) {
             <Steps {...props} />
           </Grid.Column>
         </Grid>
-      </Segment>
 
-      <RateRecipe />
+        {canRate && (
+          <Segment textAlign="center">
+            <RateRecipe ref={rateRecipeRef} />
+          </Segment>
+        )}
+      </Segment>
     </Segment>
   );
 }
@@ -259,7 +342,7 @@ function DeleteMenuItem({ recipe }: RecipeProps) {
   function onConfirm() {
     setIsConfirming(false);
     submit(
-      { intent: "deleteRecipe", recipeId: recipe.id as string },
+      { intent: ACTION_INTENTS.DELETE_RECIPE },
       { action: `${pathname}`, method: "post" }
     );
   }
@@ -370,18 +453,53 @@ function EmptyItems({ collection, canEdit, to }: EmptyItemsProps) {
   );
 }
 
-function RateRecipe() {
-  const [rating, setRating] = React.useState<number | null>(null);
+const RateRecipe = React.forwardRef<HTMLDivElement, {}>((props, ref) => {
+  const { pathname } = useLocation();
+  const submit = useSubmit();
+  const navigation = useNavigation();
+  const actionData = useActionData<typeof action>();
+  const loaderData = useLoaderData<typeof loader>();
+  const showSpinner = useSpinDelay(navigation.state === "submitting", {
+    delay: 500,
+  });
+
+  const userRating = loaderData?.recipe?.userRating || 0;
+  const ratingToDisplay = navigation.formData
+    ? Number(navigation.formData.get("rating"))
+    : userRating;
+
   return (
     <Segment>
+      <Header as="h2">Rate this recipe</Header>
+      <div ref={ref} />
+
       <Rating
+        clearable
         icon="star"
-        rating={rating || undefined}
+        rating={ratingToDisplay || 0}
         maxRating={5}
         size="massive"
-        onRate={(e, { rating }) => setRating(Number(rating))}
+        onRate={(e, { rating }) => {
+          submit(
+            { intent: ACTION_INTENTS.RATE_RECIPE, rating: rating as any },
+            { action: `${pathname}`, method: "post" }
+          );
+        }}
       />
-      <input hidden name="rating" value={String(rating)} />
+      <Loader
+        active={showSpinner}
+        size="tiny"
+        style={{ position: "relative", marginTop: 10 }}
+      />
+
+      {navigation.state === "idle" && actionData?.error ? (
+        <Message negative>
+          <Message.Header>Invalid form!</Message.Header>
+          <p>
+            <b>This is the error we found:</b> "{actionData?.error}"
+          </p>
+        </Message>
+      ) : null}
     </Segment>
   );
-}
+});
