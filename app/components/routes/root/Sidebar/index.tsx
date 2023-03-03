@@ -9,7 +9,7 @@ import {
   Header,
 } from "semantic-ui-react";
 import Confirm from "~/components/addons/Confirm";
-import { useSidebar } from "~/context/sidebar";
+import { useSidebar } from "./context";
 import { useRootData } from "~/root";
 import * as Firebase from "~/services/firebase";
 import { MOBILE_HEADER_HEIGHT } from "../Header";
@@ -194,3 +194,4 @@ function SignOutMenuItem() {
 }
 
 export { DesktopSidebar, MobileSidebar };
+export * from "./context";

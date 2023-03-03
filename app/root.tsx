@@ -18,12 +18,12 @@ import {
   useNavigate,
 } from "@remix-run/react";
 import SUIStyles from "semantic-ui-css/semantic.min.css";
-import { SidebarProvider } from "./context/sidebar";
 import { MediaContextProvider, Media, mediaStyle } from "~/services/media";
 import Header from "./components/routes/root/Header";
 import {
   DesktopSidebar,
   MobileSidebar,
+  SidebarProvider,
 } from "./components/routes/root/Sidebar";
 import React from "react";
 import { Button } from "semantic-ui-react";

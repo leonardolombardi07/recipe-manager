@@ -1,6 +1,6 @@
 import { useLocation } from "@remix-run/react";
 import { Icon, Image, Menu } from "semantic-ui-react";
-import { useSidebar } from "~/context/sidebar";
+import { useSidebar } from "../Sidebar";
 import Logo from "public/images/Logo.png";
 
 const MOBILE_HEADER_HEIGHT = 56;
