@@ -1,10 +1,12 @@
 import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { Header, Segment } from "semantic-ui-react";
 import GoogleButton from "~/components/elements/Button/GoogleButton";
 import * as Cookies from "~/services/cookies";
 import * as Firebase from "~/services/firebase";
 import { badRequest } from "~/utils/action";
+import { signIn } from "~/utils/auth.server";
 
 export const meta: MetaFunction = () => ({
   title: "Recipe Manager | Sign In",
@@ -22,8 +24,11 @@ export const action = async ({ request }: ActionArgs) => {
     throw badRequest(`We couldn't get your credentials`);
   }
 
-  const jwt = await Firebase.Server.signIn(idToken, Cookies.EXPIRES_IN);
-  return Cookies.signIn(jwt);
+  return redirect("/home", {
+    headers: {
+      "Set-Cookie": await signIn(idToken),
+    },
+  });
 };
 
 export default function SignInRoute() {

@@ -13,7 +13,7 @@ const EXPIRES_IN = 60 * 60 * 24 * 5 * 1000;
 
 const storage = createCookieSessionStorage({
   cookie: {
-    name: "RJ_session",
+    name: "remix_auth_session",
     // normally you want this to be `secure: true`
     // but that doesn't work on localhost for Safari
     // https://web.dev/when-to-use-local-https/
@@ -29,14 +29,12 @@ const storage = createCookieSessionStorage({
 async function saveJwt(jwt: string) {
   const session = await storage.getSession();
   session.set(SESSION_KEY_NAME.JWT, jwt);
-  const setCookieHeader = await storage.commitSession(session);
-  return setCookieHeader;
+  return await storage.commitSession(session);
 }
 
 async function destroyJwt(request: Request) {
   const session = await getUserSession(request);
-  const setCookieHeader = await storage.destroySession(session);
-  return setCookieHeader;
+  return await storage.destroySession(session);
 }
 
 async function getJwt(request: Request) {

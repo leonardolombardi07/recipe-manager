@@ -4,6 +4,7 @@ import type {
   Firestore,
 } from "firebase/firestore";
 import { collection } from "firebase/firestore";
+import { EMULATOR_BASE_URL } from "./constants";
 import type { CollectionName } from "./types";
 
 function createTypedCollection<T = DocumentData>(
@@ -13,4 +14,8 @@ function createTypedCollection<T = DocumentData>(
   return collection(firestore, name) as CollectionReference<T>;
 }
 
-export { createTypedCollection };
+function getEmulatorUrl(port: number) {
+  return `${EMULATOR_BASE_URL}:${port}`;
+}
+
+export { createTypedCollection, getEmulatorUrl };

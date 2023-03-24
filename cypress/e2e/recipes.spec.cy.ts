@@ -1,10 +1,7 @@
-describe("sign in spec", () => {
-  beforeEach(() => {
-    cy.visit("/signin");
-  });
-
+describe("recipes spec", () => {
   it("should be able to login", () => {
-    cy.get('[data-test="sign-in-submit"]').filter(":visible").click();
-    cy.signIn("uidd", { email: "leo", displayName: "lau" });
+    // cy.task("populateDb");
+    // cy.signIn("CLJKICPHDURtdt56eE5Y4zXQFSfR");
+    cy.signIn("UbcEXZWQSjeFZ8engINEIfcvofj2");
   });
 });

@@ -1,17 +1,20 @@
 import type { FirebaseApp } from "firebase/app";
-import { getApps } from "firebase/app";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
 import { connectFirestoreEmulator } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import type { Auth } from "firebase/auth";
-import { connectAuthEmulator } from "firebase/auth";
-import { inMemoryPersistence, setPersistence } from "firebase/auth";
+import {
+  connectAuthEmulator,
+  getAuth,
+  inMemoryPersistence,
+  setPersistence,
+} from "firebase/auth";
 import type { FirebaseStorage } from "firebase/storage";
 import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
 import { config } from "./config";
-import { EMULATOR_PORT } from "../constants";
+import { EMULATOR_BASE_URL, EMULATOR_PORT } from "../constants";
+import { getEmulatorUrl } from "../utils";
 
 interface FirebaseClientServices {
   app: FirebaseApp;
@@ -31,7 +34,6 @@ function getRawServices(): FirebaseClientServices {
 function getFirebaseAuth(app: FirebaseApp) {
   const auth = getAuth(app);
 
-  // TODO:  we can't seem to use the emulator by setting persistence
   // Let Remix handle the persistence via session cookies
   setPersistence(auth, inMemoryPersistence);
   return auth;
@@ -42,12 +44,16 @@ function getServices() {
   if (!initializedApp) {
     const services = getRawServices();
     const { auth, firestore } = services;
-    if (process.env.NODE_ENV === "development") {
-      connectAuthEmulator(auth, `http://localhost:${EMULATOR_PORT.AUTH}`, {
-        disableWarnings: true,
-      });
-      connectFirestoreEmulator(firestore, "localhost", EMULATOR_PORT.FIRESTORE);
-    }
+    // if (process.env.NODE_ENV === "development") {
+    connectAuthEmulator(auth, `http://${getEmulatorUrl(EMULATOR_PORT.AUTH)}`, {
+      disableWarnings: true,
+    });
+    connectFirestoreEmulator(
+      firestore,
+      EMULATOR_BASE_URL,
+      EMULATOR_PORT.FIRESTORE
+    );
+    // }
     return services;
   }
 

@@ -1,33 +1,21 @@
-import { initializeApp, credential } from "firebase-admin";
-import { getApp } from "firebase-admin/app";
-import type { UpdateRequest } from "firebase-admin/auth";
-// import { getServices } from "../../app/services/firebase/server/app.server";
-
-// const { auth } = getServices();
-const serverCredentials = require("../../firebase.credentials.json");
+import * as CookieUtils from "~/utils/cookies";
 
 /// <reference types="cypress" />
 // ***********************************************
 
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      signIn(uid: string, user: UpdateRequest): Promise<void>;
-      signOut(): Promise<void>;
-    }
-  }
-}
+Cypress.Commands.add("signIn", (uid: string) => {
+  cy.task("signIn", uid).then((setCookieHeader) => {
+    // TODO: get name from variable here
 
-Cypress.Commands.add("signIn", async (uid, user) => {
-  // const app = initializeApp({
-  //   credential: credential.cert(serverCredentials),
-  // });
-  // await Firebase.Server.updateUser(jwt, user);
-  // const jwt = "";
-  // await auth.createCustomToken(uid, user);
-  // await Cookies.signIn(jwt);
-});
+    // TODO: type this library!
+    const parsedCookie = CookieUtils.parse(setCookieHeader, {
+      map: false,
+    })[0];
 
-Cypress.Commands.add("signOut", async () => {
-  // await Cookies.signOut()
+    cy.setCookie(parsedCookie.name, parsedCookie.value, {
+      ...parsedCookie,
+    });
+  });
+
+  cy.visit("/home");
 });

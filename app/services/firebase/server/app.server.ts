@@ -5,6 +5,7 @@ import { getAuth } from "firebase-admin/auth";
 import { getApp, getApps } from "firebase-admin/app";
 import { credential } from "firebase-admin";
 import { EMULATOR_PORT } from "../constants";
+import { getEmulatorUrl } from "../utils";
 
 const serverCredentials = require("../../../../firebaseAdmin.credentials.json");
 
@@ -25,24 +26,20 @@ function getServices(): FirebaseServerServices {
 // has been initialized and return it if it already has been.
 function initializeIfNoExistingApp(): App {
   if (getApps().length === 0) {
-    if (process.env.NODE_ENV === "development") {
-      process.env["FIRESTORE_EMULATOR_HOST"] = getEmulatorUrl(
-        EMULATOR_PORT.FIRESTORE
-      );
-      process.env["FIREBASE_AUTH_EMULATOR_HOST"] = getEmulatorUrl(
-        EMULATOR_PORT.AUTH
-      );
-    }
+    // if (process.env.NODE_ENV === "development") {
+    process.env["FIRESTORE_EMULATOR_HOST"] = getEmulatorUrl(
+      EMULATOR_PORT.FIRESTORE
+    );
+    process.env["FIREBASE_AUTH_EMULATOR_HOST"] = getEmulatorUrl(
+      EMULATOR_PORT.AUTH
+    );
+    // }
     return initializeApp({
       credential: credential.cert(serverCredentials),
     });
   }
 
   return getApp();
-}
-
-function getEmulatorUrl(port: number) {
-  return `127.0.0.1:${port}`;
 }
 
 export { getServices };
