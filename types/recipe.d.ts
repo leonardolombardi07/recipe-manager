@@ -21,6 +21,6 @@ export interface Recipe {
   };
   author: {
     id: string;
-    name: string;
+    name?: string;
   };
 }

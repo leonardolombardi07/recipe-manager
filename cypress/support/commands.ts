@@ -1,12 +1,12 @@
+import "@testing-library/cypress/add-commands";
+
 import * as CookieUtils from "~/utils/cookies";
 
 /// <reference types="cypress" />
 // ***********************************************
 
-Cypress.Commands.add("signIn", (uid: string) => {
-  cy.task("signIn", uid).then((setCookieHeader) => {
-    // TODO: get name from variable here
-
+Cypress.Commands.add("signIn", (credentials) => {
+  cy.task("signIn", credentials).then((setCookieHeader) => {
     // TODO: type this library!
     const parsedCookie = CookieUtils.parse(setCookieHeader, {
       map: false,
@@ -16,6 +16,4 @@ Cypress.Commands.add("signIn", (uid: string) => {
       ...parsedCookie,
     });
   });
-
-  cy.visit("/home");
 });

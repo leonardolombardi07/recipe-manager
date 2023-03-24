@@ -1,17 +1,13 @@
+// TODO: couldn't import types without breaking global scope
+
 declare namespace Cypress {
   interface Chainable {
     task(
       event: "signIn",
-      arg: string,
+      arg: { email: string; password: string },
       options?: Partial<Loggable & Timeoutable>
     ): Chainable<string>;
 
-    task(
-      event: "populateDb",
-      arg: any,
-      options?: Partial<Loggable & Timeoutable>
-    ): Chainable;
-
-    signIn(uid: string): Chainable;
+    signIn(credentials: { email: string; password: string }): Chainable;
   }
 }

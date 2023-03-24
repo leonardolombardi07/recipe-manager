@@ -1,23 +1,46 @@
 import { signIn } from "~/utils/auth.server";
-import * as FirebaseTestUtils from "~/services/firebase/testUtils";
+import { getServices } from "~/services/firebase/client/app";
+import type { User } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+
+const { auth } = getServices();
+
+export interface SignInCredentials {
+  email: string;
+  password: string;
+}
+
+async function createIdToken({ email, password }: SignInCredentials) {
+  let user: User;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    user = userCredential.user;
+  } catch (error) {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    user = userCredential.user;
+  }
+
+  return user.getIdToken();
+}
 
 function authTasks(
   on: Cypress.PluginEvents,
   config: Cypress.PluginConfigOptions
 ): void {
   on("task", {
-    // async populateDb() {
-    //   await Firebase.Server.createUser__TEST_ONLY({
-    //     email: "leo@email.com",
-    //     password: "leo123456",
-    //     uid: "uid",
-    //   });
-    //   return null;
-    // },
-    async signIn(uid: string) {
-      // TODO: be able to customize displayName and e-mail
-      const idToken = await FirebaseTestUtils.createIdToken__TEST_ONLY(uid);
-      console.log("idToken: ", idToken);
+    async signIn(credentials: SignInCredentials) {
+      const idToken = await createIdToken(credentials);
       return signIn(idToken);
     },
   });

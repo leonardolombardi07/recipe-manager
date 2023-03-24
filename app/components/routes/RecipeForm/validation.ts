@@ -133,12 +133,12 @@ function validateServingValue(value: FormDataEntryValue | null) {
   return null;
 }
 
-function validateAuthor(author: { id: string; name: string }) {
+function validateAuthor(author: { id: string; name?: string }) {
   if (!author.id || typeof author.id !== "string") {
     return `Author id "${author.id} must be a string"`;
   }
 
-  if (!author.name || typeof author.name !== "string") {
+  if (typeof author.name !== "string") {
     return `Author name "${author.name} must be a string"`;
   }
 

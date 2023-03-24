@@ -118,6 +118,7 @@ function RecipeForm({ initialValues, confirmButton }: RecipeFormProps) {
             required={process.env.NODE_ENV === "production"}
             error={actionData?.errors?.title}
             defaultValue={getDefaultValue("title")}
+            data-test={"recipe-title-input"}
           />
 
           <FastFormTextArea
@@ -126,6 +127,7 @@ function RecipeForm({ initialValues, confirmButton }: RecipeFormProps) {
             placeholder="Tell us about your recipe"
             error={actionData?.errors?.description}
             defaultValue={getDefaultValue("description")}
+            data-test={"recipe-description-input"}
           />
 
           <Timings initialTimings={getDefaultValue("timings")} />
@@ -149,7 +151,7 @@ function RecipeForm({ initialValues, confirmButton }: RecipeFormProps) {
           Cancel
         </Button>
 
-        <Button primary size="huge">
+        <Button primary size="huge" data-test={"recipe-create-button"}>
           {confirmButton}
         </Button>
       </Form.Group>
@@ -194,6 +196,7 @@ function Timings({
           placeholder="0 hours"
           error={actionData?.errors?.timings?.prepTime?.hours}
           fluid
+          data-test={"recipe-prepTimeHours-input"}
         />
 
         <input
@@ -212,6 +215,7 @@ function Timings({
           placeholder="0 mins"
           error={actionData?.errors?.timings?.prepTime?.minutes}
           fluid
+          data-test={"recipe-prepTimeMinutes-input"}
         />
 
         <input
@@ -228,6 +232,7 @@ function Timings({
           placeholder="0 hours"
           error={actionData?.errors?.timings?.cookTime?.hours}
           fluid
+          data-test={"recipe-cookTimeHours-input"}
         />
 
         <input
@@ -246,6 +251,7 @@ function Timings({
           placeholder="0 mins"
           error={actionData?.errors?.timings?.cookTime?.minutes}
           fluid
+          data-test={"recipe-cookTimeMinutes-input"}
         />
       </Form.Group>
 
@@ -255,6 +261,7 @@ function Timings({
         placeholder="e.g plus resting"
         error={actionData?.errors?.timings?.extraTime}
         defaultValue={initialTimings.extraTime}
+        data-test={"recipe-extraTime-input"}
       />
     </Segment>
   );
@@ -294,6 +301,7 @@ function DifficultyInput({
         label={"Difficulty level"}
         placeholder="Easy"
         error={actionData?.errors?.difficulty}
+        data-test={"recipe-difficulty-input"}
       />
     </React.Fragment>
   );
@@ -319,7 +327,13 @@ function Servings({
 
   return (
     <Form.Field>
-      <input hidden readOnly name="servingsType" value={servingsType} />
+      <input
+        hidden
+        readOnly
+        name="servingsType"
+        value={servingsType}
+        data-test={"recipe-servingsType-input"}
+      />
 
       <div style={{ display: "flex", flexDirection: "column" }}>
         <Label basic style={{ border: 0, fontSize: 13, paddingLeft: 0 }}>
@@ -331,12 +345,14 @@ function Servings({
           <Button
             positive={servingsType === "serves"}
             onClick={(e) => onChangeServingType(e, "serves")}
+            data-test={"recipe-servingType-button-serves"}
           >
             Serves
           </Button>
           <Button
             positive={servingsType === "makes"}
             onClick={(e) => onChangeServingType(e, "makes")}
+            data-test={"recipe-servingType-button-makes"}
           >
             Makes
           </Button>
@@ -349,6 +365,7 @@ function Servings({
         required={process.env.NODE_ENV === "production"}
         error={actionData?.errors?.servings?.value}
         defaultValue={initialServings.value}
+        data-test={"recipe-servingsValue-input"}
       />
     </Form.Field>
   );
@@ -457,6 +474,7 @@ function Ingredients({ initialIngredients }: { initialIngredients: string[] }) {
           onKeyDown={(e) => {
             if (e.key === "Enter") onAdd();
           }}
+          data-test={"recipe-addIngredient-input"}
         />
 
         <Button
@@ -466,6 +484,7 @@ function Ingredients({ initialIngredients }: { initialIngredients: string[] }) {
             event.preventDefault();
             onAdd();
           }}
+          data-test={"recipe-addIngredient-button"}
         >
           Add next ingredient
         </Button>
@@ -600,6 +619,7 @@ function Steps({ initialSteps }: { initialSteps: string[] }) {
           textareaRef={nextRef}
           value={next}
           onChange={(e) => setNext(e.target.value)}
+          data-test={"recipe-addStep-input"}
         />
 
         <Button
@@ -609,6 +629,7 @@ function Steps({ initialSteps }: { initialSteps: string[] }) {
             event.preventDefault();
             onAdd();
           }}
+          data-test={"recipe-addStep-button"}
         >
           Add next step
         </Button>
