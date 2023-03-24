@@ -6,7 +6,7 @@ import { getApp, getApps } from "firebase-admin/app";
 import { credential } from "firebase-admin";
 import { EMULATOR_PORT } from "../constants";
 
-const serverCredentials = require("./recipe-manager-44300-firebase-adminsdk-u0tss-88c9691687.json");
+const serverCredentials = require("../../../../firebaseAdmin.credentials.json");
 
 interface FirebaseServerServices {
   app: App;

@@ -26,23 +26,17 @@ const storage = createCookieSessionStorage({
   },
 });
 
-async function signIn(jwt: string) {
+async function saveJwt(jwt: string) {
   const session = await storage.getSession();
   session.set(SESSION_KEY_NAME.JWT, jwt);
-  return redirect("/home", {
-    headers: {
-      "Set-Cookie": await storage.commitSession(session),
-    },
-  });
+  const setCookieHeader = await storage.commitSession(session);
+  return setCookieHeader;
 }
 
-async function signOut(request: Request) {
+async function destroyJwt(request: Request) {
   const session = await getUserSession(request);
-  return redirect("/signin", {
-    headers: {
-      "Set-Cookie": await storage.destroySession(session),
-    },
-  });
+  const setCookieHeader = await storage.destroySession(session);
+  return setCookieHeader;
 }
 
 async function getJwt(request: Request) {
@@ -97,7 +91,7 @@ export {
   redirectIfUnauthorized,
   redirectIfAuthorized,
   getAuthenticatedUser,
-  signIn,
-  signOut,
+  saveJwt,
+  destroyJwt,
   EXPIRES_IN,
 };
